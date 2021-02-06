@@ -23,7 +23,7 @@ async def sleep(s=0.0):
     await asyncio.sleep(s)
 
 
-__version__ = "8.0.0b1"
+__version__ = "8.0.2"
 
 
 class OandaClient(
