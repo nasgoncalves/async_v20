@@ -129,7 +129,7 @@ class OandaClient(
         health_host="api-status.oanda.com",
         health_port=80,
         health_scheme="http",
-        health_check=False,
+        health_check=True,
         datetime_format="UNIX",
         rest_timeout=10,
         stream_timeout=60,

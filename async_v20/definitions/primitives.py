@@ -103,7 +103,7 @@ class AccountID(str, Primitive):
     # Correct syntax of value
     format_syntax = '"-"-delimited string with format "{siteID}-{divisionID}-{userID}-{accountNumber}"'
     # Example of correct format
-    example = '001-011-5838423-001'
+    example = '123-123-12345678-123'
 
     def __new__(cls, value):
         assert domain_check(value, example=cls.example)

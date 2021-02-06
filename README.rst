@@ -222,7 +222,7 @@ By default `async_v20`. **DateTime**'s will be converted into `pandas`. **Timest
    currency                                                           AUD
    financing                                                      -3.5596
    hedging_enabled                                                  False
-   id                                                 123-123-1234567-123
+   id                                                 123-123-12345678-123
    last_margin_call_extension_time                                   None
    last_transaction_id                                               6360
    margin_available                                               97801.9

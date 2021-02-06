@@ -39,7 +39,6 @@ def get_valid_primitive_data(primitive):
         data = primitive()
     # The only valid option here should be a subclass of str
     else:
-
         assert issubclass(primitive, (str))
 
         try:

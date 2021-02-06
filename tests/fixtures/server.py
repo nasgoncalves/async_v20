@@ -8,27 +8,36 @@ from aiohttp import web
 
 from .routes import routes
 
-rest_headers = {'Access-Control-Allow-Headers': 'Authorization, Content-Type, Accept-Datetime-Format',
-                'Access-Control-Allow-Methods': 'PUT, PATCH, POST, GET, OPTIONS, DELETE',
-                'Access-Control-Allow-Origin': '*',
-                'Content-Type': 'application/json', 'RequestID': '42359369470976686', 'Content-Encoding': 'gzip',
-                'Vary': 'Accept-Encoding', 'Connection': 'Keep-Alive'}
+rest_headers = {
+    "Access-Control-Allow-Headers": "Authorization, Content-Type, Accept-Datetime-Format",
+    "Access-Control-Allow-Methods": "PUT, PATCH, POST, GET, OPTIONS, DELETE",
+    "Access-Control-Allow-Origin": "*",
+    "Content-Type": "application/json",
+    "RequestID": "42359369470976686",
+    "Content-Encoding": "gzip",
+    "Vary": "Accept-Encoding",
+    "Connection": "Keep-Alive",
+}
 
-stream_headers = {'Access-Control-Allow-Headers': 'Authorization, Content-Type, Accept-Datetime-Format',
-                  'Access-Control-Allow-Methods': 'PUT, PATCH, POST, GET, OPTIONS, DELETE',
-                  'Access-Control-Allow-Origin': '*',
-                  'Content-Type': 'application/json', 'RequestID': '42359369470976686',
-                  'Vary': 'Accept-Encoding', 'Connection': 'Keep-Alive'}
+stream_headers = {
+    "Access-Control-Allow-Headers": "Authorization, Content-Type, Accept-Datetime-Format",
+    "Access-Control-Allow-Methods": "PUT, PATCH, POST, GET, OPTIONS, DELETE",
+    "Access-Control-Allow-Origin": "*",
+    "Content-Type": "application/json",
+    "RequestID": "42359369470976686",
+    "Vary": "Accept-Encoding",
+    "Connection": "Keep-Alive",
+}
 
 status = 200
-received = ''
+received = ""
 sleep_time = 0
 
 
 def get_id_from_path(path):
     try:
-        path_id = re.findall(r'(?<=\/)(\d+)(?=(\/|\Z))', path)[0][0]
-        path = re.sub(r'(?<=\/)(\d+)(?=(\/|\Z))', '0000', path)
+        path_id = re.findall(r"(?<=\/)(\d+)(?=(\/|\Z))", path)[0][0]
+        path = re.sub(r"(?<=\/)(\d+)(?=(\/|\Z))", "0000", path)
     except:
         return path, None
     else:
@@ -36,7 +45,7 @@ def get_id_from_path(path):
 
 
 def get_response_data(method, path, specifier):
-    data = 'null'
+    data = "null"
     try:
         data = routes[(method, path)]
     except KeyError:
@@ -60,7 +69,7 @@ def get_response_status():
 
 async def handler(request):
     method = request.method
-    path = request.path.encode('ascii', 'backslashreplace').decode('ascii')
+    path = request.path.encode("ascii", "backslashreplace").decode("ascii")
     path, path_id = get_id_from_path(path)
 
     response_data = get_response_data(method, path, path_id)
@@ -71,21 +80,27 @@ async def handler(request):
     received = await request.read()
 
     if response_data is None:
-        response_data = 'null'
+        response_data = "null"
 
-    if path == '/v3/accounts/123-123-1234567-123/pricing/stream':
-        resp = web.StreamResponse(headers=stream_headers,
-                                  status=response_status,
-                                  reason='OK')
+    if path == "/v3/accounts/123-123-12345678-123/pricing/stream":
+        resp = web.StreamResponse(
+            headers=stream_headers, status=response_status, reason="OK"
+        )
         await resp.prepare(request)
+
         while True:
-            await resp.write(bytes(response_data, encoding='utf8'))
-            await resp.write(bytes('\n', encoding='utf8'))
+            await resp.write(bytes(response_data, encoding="utf8"))
+            await resp.write(bytes("\n", encoding="utf8"))
 
             await asyncio.sleep(sleep_time)
+
     await asyncio.sleep(sleep_time)
-    return web.Response(body=gzip.compress(bytes(response_data, encoding='utf8')), headers=rest_headers,
-                        status=response_status)
+
+    return web.Response(
+        body=gzip.compress(bytes(response_data, encoding="utf8")),
+        headers=rest_headers,
+        status=response_status,
+    )
 
 
 @pytest.yield_fixture

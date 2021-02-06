@@ -6,7 +6,7 @@ import gzip
 from aiohttp import web
 import asyncio
 
-routes.update({('GET', '/v3/accounts/123-123-1234567-123/changes'): cycle(changes)})
+routes.update({('GET', '/v3/accounts/123-123-12345678-123/changes'): cycle(changes)})
 
 async def handler(request):
     method = request.method
