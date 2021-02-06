@@ -23,12 +23,20 @@ async def sleep(s=0.0):
     await asyncio.sleep(s)
 
 
-__version__ = '8.0.0b1'
+__version__ = "8.0.0b1"
 
 
-class OandaClient(AccountInterface, InstrumentInterface, OrderInterface, PositionInterface,
-                  PricingInterface, TradeInterface, TransactionInterface, UserInterface,
-                  HealthInterface):
+class OandaClient(
+    AccountInterface,
+    InstrumentInterface,
+    OrderInterface,
+    PositionInterface,
+    PricingInterface,
+    TradeInterface,
+    TransactionInterface,
+    UserInterface,
+    HealthInterface,
+):
     """
     Create an API context for v20 access
 
@@ -58,8 +66,8 @@ class OandaClient(AccountInterface, InstrumentInterface, OrderInterface, Positio
         debug: Set to True to log debug messages.
 
     """
-    headers = {'Connection': 'keep-alive',
-               'OANDA-Agent': 'async_v20_' + __version__}
+
+    headers = {"Connection": "keep-alive", "OANDA-Agent": "async_v20_" + __version__}
 
     default_parameters = {}
 
@@ -69,7 +77,9 @@ class OandaClient(AccountInterface, InstrumentInterface, OrderInterface, Positio
 
     _initialization_step = None  # The first step to be called during initialization
 
-    initialization_sleep = 0.5  # Time to poll initialized when waiting for initialization
+    initialization_sleep = (
+        0.5  # Time to poll initialized when waiting for initialization
+    )
 
     _account = None
 
@@ -104,31 +114,33 @@ class OandaClient(AccountInterface, InstrumentInterface, OrderInterface, Positio
     def datetime_format(self):
         return self._datetime_format
 
-    def __init__(self,
-                 token=None,
-                 account_id=None,
-                 format_order_requests=False,
-                 max_transaction_history=100,
-                 rest_host='api-fxpractice.oanda.com',
-                 rest_port=443,
-                 rest_scheme='https',
-                 stream_host='stream-fxpractice.oanda.com',
-                 stream_port=None,
-                 stream_scheme='https',
-                 health_host='api-status.oanda.com',
-                 health_port=80,
-                 health_scheme='http',
-                 datetime_format='UNIX',
-                 rest_timeout=10,
-                 stream_timeout=60,
-                 max_requests_per_second=99,
-                 max_simultaneous_connections=10,
-                 debug=False):
+    def __init__(
+        self,
+        token=None,
+        account_id=None,
+        format_order_requests=False,
+        max_transaction_history=100,
+        rest_host="api-fxpractice.oanda.com",
+        rest_port=443,
+        rest_scheme="https",
+        stream_host="stream-fxpractice.oanda.com",
+        stream_port=None,
+        stream_scheme="https",
+        health_host="api-status.oanda.com",
+        health_port=80,
+        health_scheme="http",
+        health_check=False,
+        datetime_format="UNIX",
+        rest_timeout=10,
+        stream_timeout=60,
+        max_requests_per_second=99,
+        max_simultaneous_connections=10,
+        debug=False,
+    ):
 
         self.version = __version__
 
-        if token is None:
-            token = os.environ['OANDA_TOKEN']
+        token = token or os.environ["OANDA_TOKEN"]
 
         self.account_id = account_id
 
@@ -137,15 +149,22 @@ class OandaClient(AccountInterface, InstrumentInterface, OrderInterface, Positio
         self.max_transaction_history = max_transaction_history
 
         # V20 REST API URL
-        rest_host = partial(URL.build, host=rest_host, port=rest_port, scheme=rest_scheme)
+        rest_host = partial(
+            URL.build, host=rest_host, port=rest_port, scheme=rest_scheme
+        )
 
         # v20 STREAM API URL
-        stream_host = partial(URL.build, host=stream_host, port=stream_port, scheme=stream_scheme)
+        stream_host = partial(
+            URL.build, host=stream_host, port=stream_port, scheme=stream_scheme
+        )
 
         # V20 API health URL
-        health_host = partial(URL.build, host=health_host, port=health_port, scheme=health_scheme)
+        if health_check:
+            health_host = partial(
+                URL.build, host=health_host, port=health_port, scheme=health_scheme
+            )
 
-        self._hosts = {'REST': rest_host, 'STREAM': stream_host, 'HEALTH': health_host}
+        self._hosts = {"REST": rest_host, "STREAM": stream_host, "HEALTH": health_host}
 
         # The timeout to use when making a polling request with the
         # v20 REST server
@@ -163,8 +182,10 @@ class OandaClient(AccountInterface, InstrumentInterface, OrderInterface, Positio
         # This is the default parameter dictionary. OandaClient Methods that require certain parameters
         # that are  not explicitly passed will try to find it in this dict
         self.default_parameters.update(
-            {Authorization: 'Bearer {}'.format(token),
-             AcceptDatetimeFormat: datetime_format}
+            {
+                Authorization: "Bearer {}".format(token),
+                AcceptDatetimeFormat: datetime_format,
+            }
         )
 
         self.debug = debug
@@ -176,7 +197,7 @@ class OandaClient(AccountInterface, InstrumentInterface, OrderInterface, Positio
 
             :class:`~async_v20.Account`
         """
-        logger.info('account()')
+        logger.info("account()")
         if too_many_passed_transactions(self):
             await self.get_account_details()
         else:
@@ -198,14 +219,17 @@ class OandaClient(AccountInterface, InstrumentInterface, OrderInterface, Positio
         # - get all open trades again and check there there are None
         # - return close trade responses
 
-        logger.info('close_all_trades()')
+        logger.info("close_all_trades()")
         response = await self.list_open_trades()
         if response:
-            close_trade_responses = await asyncio.gather(*[self.close_trade(trade.id)
-                                                           for trade in response.trades])
+            close_trade_responses = await asyncio.gather(
+                *[self.close_trade(trade.id) for trade in response.trades]
+            )
         else:
-            msg = f'Could not get open trades. ' \
-                  f'Server returned status {response.status}'
+            msg = (
+                f"Could not get open trades. "
+                f"Server returned status {response.status}"
+            )
             logger.error(msg)
             raise CloseAllTradesFailure(msg)
         # After closing all trades check that all trades have indeed been closed
@@ -213,8 +237,10 @@ class OandaClient(AccountInterface, InstrumentInterface, OrderInterface, Positio
         if response and len(response.trades) == 0:
             pass
         else:
-            msg = f'Unable to confirm all trades have been closed! ' \
-                  f'Server returned status {response.status}'
+            msg = (
+                f"Unable to confirm all trades have been closed! "
+                f"Server returned status {response.status}"
+            )
             logger.error(msg)
             raise CloseAllTradesFailure(msg)
 
@@ -231,7 +257,7 @@ class OandaClient(AccountInterface, InstrumentInterface, OrderInterface, Positio
         if self._next_request_time - time() > 0:
             wait_time = self._next_request_time - time()
             if self.debug:
-                logger.debug('Request waiting for %s seconds', wait_time)
+                logger.debug("Request waiting for %s seconds", wait_time)
             await sleep(wait_time)
         return
 
@@ -243,7 +269,7 @@ class OandaClient(AccountInterface, InstrumentInterface, OrderInterface, Positio
         await self.close()
 
     def __enter__(self):
-        logger.warning('<with> used rather than <async with>')
+        logger.warning("<with> used rather than <async with>")
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
@@ -258,7 +284,7 @@ class OandaClient(AccountInterface, InstrumentInterface, OrderInterface, Positio
 
     async def initialize_session(self):
         # Create http session this client will use to sent all requests
-        logger.info('Initializing session')
+        logger.info("Initializing session")
         conn = aiohttp.TCPConnector(limit=self.max_simultaneous_connections)
 
         self.session = aiohttp.ClientSession(
@@ -292,9 +318,9 @@ class OandaClient(AccountInterface, InstrumentInterface, OrderInterface, Positio
 
         else:  # If it gets this far. An initialization if required.
 
-            msg = ''  # msg is used to create a useful Error msg if Initialization fails
+            msg = ""  # msg is used to create a useful Error msg if Initialization fails
             try:
-                logger.info('Initializing client')
+                logger.info("Initializing client")
                 self.initializing = True  # immediately set initializing to make sure
                 # Upcoming requests wait for this initialization to complete.
 
@@ -321,12 +347,16 @@ class OandaClient(AccountInterface, InstrumentInterface, OrderInterface, Positio
 
                     self._initialization_step = self.list_accounts.__name__
                     response = await self.list_accounts()
-                    if response:  # Checks is the response status was the expected status as
+                    if (
+                        response
+                    ):  # Checks is the response status was the expected status as
                         # defined by OANDA spec.
-                        self.default_parameters.update({AccountID: response['accounts'][0].id})
+                        self.default_parameters.update(
+                            {AccountID: response["accounts"][0].id}
+                        )
                     else:
                         self.initializing = False
-                        msg = f'Server did not return AccountID during initialization'
+                        msg = f"Server did not return AccountID during initialization"
                         logger.error(msg)
                         raise InitializationFailure(msg)
 
@@ -337,25 +367,29 @@ class OandaClient(AccountInterface, InstrumentInterface, OrderInterface, Positio
                 self._initialization_step = self.get_account_details.__name__
                 response = await self.get_account_details()
                 if response:
-                    self._account = response['account']
+                    self._account = response["account"]
                 else:
                     self.initializing = False
-                    msg = f'Server did not return Account Details during initialization.'
+                    msg = (
+                        f"Server did not return Account Details during initialization."
+                    )
                     logger.error(msg)
                     raise InitializationFailure(msg)
 
                 self._initialization_step = self.account_instruments.__name__
                 response = await self.account_instruments()
                 if response:
-                    self.instruments = response['instruments']
+                    self.instruments = response["instruments"]
                 else:
                     self.initializing = False
-                    msg = f'Server did not return Account Instruments during initialization'
+                    msg = f"Server did not return Account Instruments during initialization"
                     logger.error(msg)
                     raise InitializationFailure(msg)
 
                 # On initialization the SinceTransactionID needs updated to reflect LastTransactionID
-                self.default_parameters.update({SinceTransactionID: self.default_parameters[LastTransactionID]})
+                self.default_parameters.update(
+                    {SinceTransactionID: self.default_parameters[LastTransactionID]}
+                )
 
                 self.initializing = False
                 self.initialized = True
@@ -363,8 +397,10 @@ class OandaClient(AccountInterface, InstrumentInterface, OrderInterface, Positio
             except ResponseTimeout:
                 self.initializing = False
                 self.initialized = False
-                msg = f'Initialization step {self._initialization_step} ' \
-                      f'took longer than {self.rest_timeout} seconds'
+                msg = (
+                    f"Initialization step {self._initialization_step} "
+                    f"took longer than {self.rest_timeout} seconds"
+                )
                 logger.exception(msg)
                 raise InitializationFailure(msg)
 

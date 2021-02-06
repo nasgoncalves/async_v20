@@ -35,7 +35,7 @@ def json_to_instance_attributes(self, kwargs, template):
             assert attr in template
             yield attr, value
         except (KeyError, AssertionError):
-            possible_arguments = ', '.join(attr for attr in template)
+            possible_arguments =    ', '.join(attr for attr in template)
             msg = f'`{key}` with value `{value}` supplied to {self.__class__.__qualname__} \n' \
                   f'Possible arguments include: {possible_arguments}'
             logger.error(msg)
@@ -43,11 +43,11 @@ def json_to_instance_attributes(self, kwargs, template):
 
 
 def domain_check(value, example=None, possible_values=None):
-    if example:
-        if not len(str(example)) == len(str(value)):
-            msg = f'{value} does not match length of example {example}'
-            logger.error(msg)
-            raise InvalidValue(msg)
+    # if example:
+    #     if not len(str(example)) == len(str(value)):
+    #         msg = f'{value} does not match length of example {example}'
+    #         logger.error(msg)
+    #         raise InvalidValue(msg)
 
     if possible_values:
         if not value in possible_values:
