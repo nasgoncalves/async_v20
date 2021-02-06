@@ -3,7 +3,13 @@ from inspect import isclass
 import pytest
 
 from async_v20.definitions import primitives
-from async_v20.definitions.primitives import ClientComment, ClientID, ClientTag, OrderID, TradeID
+from async_v20.definitions.primitives import (
+    ClientComment,
+    ClientID,
+    ClientTag,
+    OrderID,
+    TradeID,
+)
 from async_v20.definitions.primitives import OrderSpecifier, TradeSpecifier, DateTime
 from async_v20.definitions.primitives import TransactionID, PriceValue, DecimalNumber
 from tests.test_definitions.helpers import get_valid_primitive_data
@@ -11,73 +17,96 @@ from async_v20.exceptions import InvalidValue, InvalidFormatArguments
 from time import time
 from datetime import datetime
 import logging
-logger = logging.getLogger('async_v20')
+
+logger = logging.getLogger("async_v20")
 logger.disabled = True
 
 import pandas as pd
+
 
 def test_date_time_can_be_created_from_time_and_datetime():
     assert DateTime(time())
     assert DateTime(datetime.now())
 
+
 def test_date_time_can_be_created_from_integer():
     t = time()
     assert DateTime(t).second == DateTime(int(t)).second
-    assert DateTime(t).second == DateTime(str(t).replace('.', '')).second
+    assert DateTime(t).second == DateTime(str(t).replace(".", "")).second
+
 
 def test_datetime_converts_between_different_representations():
-    unix_example = '1502463871.639182000'
-    rfc3339_example = '2017-08-11T15:04:31.639182000Z'
+    unix_example = "1502463871.639182000"
+    rfc3339_example = "2017-08-11T15:04:31.639182000Z"
     assert DateTime(unix_example) == DateTime(rfc3339_example)
-    assert DateTime(rfc3339_example).json('UNIX') == unix_example
-    assert DateTime(DateTime(rfc3339_example).json('UNIX')) == DateTime(rfc3339_example)
-    assert DateTime(unix_example).json('RFC3339') == rfc3339_example
+    assert DateTime(rfc3339_example).json("UNIX") == unix_example
+    assert DateTime(DateTime(rfc3339_example).json("UNIX")) == DateTime(rfc3339_example)
+    assert DateTime(unix_example).json("RFC3339") == rfc3339_example
 
 
 def test_datetime_format_only_allows_valid_format_string():
-    unix_example = '1502463871.639182000'
+    unix_example = "1502463871.639182000"
     with pytest.raises(InvalidValue):
-        assert DateTime(unix_example).json(datetime_format='BADVALUE')
+        assert DateTime(unix_example).json(datetime_format="BADVALUE")
 
-@pytest.mark.parametrize('primitive', map(lambda x: getattr(primitives, x), primitives.__all__))
+
+@pytest.mark.parametrize(
+    "primitive", map(lambda x: getattr(primitives, x), primitives.__all__)
+)
 def test_get_valid_primitive_data(primitive):
     """Test the helper function can provide valid data for all primitives"""
     assert get_valid_primitive_data(primitive)
 
 
 # Get All user defined class' in primitive package
-@pytest.mark.parametrize('primitive', map(lambda x: getattr(primitives, x), primitives.__all__))
+@pytest.mark.parametrize(
+    "primitive", map(lambda x: getattr(primitives, x), primitives.__all__)
+)
 def test_all_incorrect_primitive_values_cannot_be_assigned(primitive):
     if isclass(primitive):
-        if getattr(primitive, 'values', None):
+        if getattr(primitive, "values", None):
             for key in primitive.values.keys():
                 with pytest.raises(InvalidValue):
-                    primitive(key + '_test')
+                    primitive(key + "_test")
 
 
 # Get All user defined class' in primitive package
-@pytest.mark.parametrize('primitive', map(lambda x: getattr(primitives, x), primitives.__all__))
+@pytest.mark.parametrize(
+    "primitive", map(lambda x: getattr(primitives, x), primitives.__all__)
+)
 def test_primitive_values_have_length_checking(primitive):
     if isclass(primitive):
-        if getattr(primitive, 'values', None):
+        if getattr(primitive, "values", None):
             for key in primitive.values.keys():
                 with pytest.raises(InvalidValue):
-                    primitive(key + '_test')
+                    primitive(key + "_test")
 
 
 # Get All user defined class' in primitive package
-@pytest.mark.parametrize('primitive', map(lambda x: getattr(primitives, x), primitives.__all__))
+@pytest.mark.parametrize(
+    "primitive", map(lambda x: getattr(primitives, x), primitives.__all__)
+)
 def test_primitives_enforce_length_checking(primitive):
     if isclass(primitive):
-        if getattr(primitive, 'example', None) and primitive not in \
-                (OrderSpecifier, ClientComment, ClientID, ClientTag, TransactionID, TradeSpecifier,
-                # These are integers and this wouldn't make sense
-                 OrderID, TradeID):
+        if getattr(primitive, "example", None) and primitive not in (
+            OrderSpecifier,
+            ClientComment,
+            ClientID,
+            ClientTag,
+            TransactionID,
+            TradeSpecifier,
+            # These are integers and this wouldn't make sense
+            OrderID,
+            TradeID,
+        ):
+
             with pytest.raises(InvalidValue):
-                primitive(primitive.example + '_')
+                primitive(primitive.example + "_")
 
 
-@pytest.mark.parametrize('primitive', map(lambda x: getattr(primitives, x), primitives.__all__))
+@pytest.mark.parametrize(
+    "primitive", map(lambda x: getattr(primitives, x), primitives.__all__)
+)
 def test_primitives_return_correct_type_when_initialized_with_value(primitive):
     if primitive == DateTime:
         assert type(primitive(get_valid_primitive_data(primitive))) == pd.Timestamp
@@ -112,6 +141,7 @@ def test_price_value_format():
     # Precision must be positive
     with pytest.raises(InvalidFormatArguments):
         price_value.format(-1)
+
 
 def test_decimal_number_format():
     decimal_number = DecimalNumber(1234.123456789)
@@ -153,5 +183,3 @@ def test_decimal_number_format():
 
     # min_ and max_ can be the same value
     assert decimal_number.format(4, 100, 100) == -100
-
-
